@@ -68,6 +68,25 @@ jobs:
         with:
           path: ota # Corresponds to PAGES_REPO_FOLDER
           fetch-depth: 0 # Allow for switching to github-pages branch
+      - name: Ensure gh-pages branch exists
+        run: |
+          set -euo pipefail
+          cd ota
+          if git show-ref --verify --quiet refs/heads/gh-pages; then
+            exit 0
+          fi
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git branch --track gh-pages origin/gh-pages
+            exit 0
+          fi
+
+          current_branch="$(git rev-parse --abbrev-ref HEAD)"
+          git checkout --orphan gh-pages
+          git rm -rf . >/dev/null 2>&1 || true
+          touch .nojekyll
+          git add .nojekyll
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' -c commit.gpgsign=false commit -m "Initialize gh-pages branch"
+          git checkout "${current_branch}"
       - name: Set inputs
         # Empty means, use version defined in rooted-ota.sh
         # Note the difference between github.event.inputs (workflow_dispatch) and inputs (workflow_call)
