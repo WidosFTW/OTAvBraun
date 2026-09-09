@@ -33,6 +33,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
+          MAGISK_VERSION: "v31.0"
         run: |
           DEBUG=1 bash -c '. rooted-ota.sh && findLatestVersion && checkBuildNecessary && createReleaseIfNecessary && echo "release_created=true" >> $GITHUB_OUTPUT'
   
