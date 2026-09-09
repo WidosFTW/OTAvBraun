@@ -1,75 +1,11 @@
 name: Release single device
 
 on:
-  # Note that push/PR will not release, only build to see if there are obvious failures
-  push:
-    branches:
-      - '*'
-    paths:
-      - rooted-ota.sh
-      - apatch-patch.py
-      - tests/**
-      - .github/workflows/release-single.yaml
-  pull_request:
-    types: [synchronize, opened, reopened]
-    paths:
-      - rooted-ota.sh
-      - apatch-patch.py
-      - tests/**
-      - .github/workflows/release-single.yaml
   workflow_call:
     inputs:
       device-id:
         type: string
       magisk-preinit-device:
-        type: string
-        default: ''
-      apatch-boot-url:
-        type: string
-        default: ''
-      apatch-boot-sha256:
-        type: string
-        default: ''
-      apatch-boot-version:
-        type: string
-        default: ''
-      apatch-manager-url:
-        type: string
-        default: ''
-      apatch-manager-sha256:
-        type: string
-        default: ''
-      skip-rooted:
-        type: boolean
-        default: false
-      magisk-version:
-        type: string
-        default: ''
-      skip-rootless:
-        type: boolean
-        default: false
-      upload-test-ota:
-        type: boolean
-        default: false
-      force-build:
-        type: boolean
-        default: false
-      force-ota-server-upload:
-        type: boolean
-        default: false
-      skip-release:
-        type: boolean
-        default: false
-      rooted-graphene-version:
-        type: string
-        default: ''
-      ota-version:
-        type: string
-        default: ''
-      skip-pixincreate:
-        type: boolean
-        default: false
-      additional-env:
         type: string
         default: ''
   
@@ -81,25 +17,6 @@ on:
         required: true
       magisk-preinit-device:
         description: Magisk preinit device
-        required: false
-      apatch-boot-url:
-        description: HTTPS URL of the exact-version APatch boot image
-        required: false
-      apatch-boot-sha256:
-        description: SHA-256 of the APatch boot image
-        required: false
-      apatch-boot-version:
-        description: GrapheneOS version used to build the APatch boot image
-        required: false
-      apatch-manager-url:
-        description: HTTPS URL of the matching signed APatch manager APK
-        required: false
-      apatch-manager-sha256:
-        description: SHA-256 of the APatch manager APK
-        required: false
-      skip-rooted:
-        description: skip building rooted OTA
-        type: boolean
         required: false
       skip-rootless:
         description: skip building rootless OTA
@@ -126,9 +43,6 @@ on:
         required: false
       ota-version:
         description: OTA version
-        required: false
-      magisk-version:
-        description: Magisk version
         required: false
       skip-pixincreate:
         description: skip building OTA rooted with pixincreate's magisk fork
@@ -159,71 +73,37 @@ jobs:
         # Note the difference between github.event.inputs (workflow_dispatch) and inputs (workflow_call)
         run: |
           echo "DEVICE_ID=$(echo '${{ github.event.inputs.device-id || inputs.device-id || 'shiba' }}' | xargs)" >> $GITHUB_ENV
-          if [[ "${{ github.event.inputs.skip-rooted || inputs.skip-rooted || 'false' }}" != "true" ]]; then
-            echo "MAGISK_PREINIT_DEVICE=$(echo '${{ github.event.inputs.magisk-preinit-device || inputs.magisk-preinit-device || 'sda10' }}' | xargs)" >> $GITHUB_ENV
-          fi
+          echo "MAGISK_PREINIT_DEVICE=$(echo '${{ github.event.inputs.magisk-preinit-device || inputs.magisk-preinit-device || '' }}' | xargs)" >> $GITHUB_ENV
           
-          echo "MAGISK_VERSION=$(echo '${{ github.event.inputs.magisk-version || inputs.magisk-version || 'v31.0' }}' | xargs)" >> $GITHUB_ENV
-          echo "OTA_VERSION=$(echo '${{ github.event.inputs.ota-version || inputs.ota-version || '' }}' | xargs)" >> $GITHUB_ENV
-          echo "APATCH_BOOT_IMAGE=$(echo '${{ github.event.inputs.apatch-boot-url || inputs.apatch-boot-url || '' }}' | xargs)" >> $GITHUB_ENV
-          echo "APATCH_BOOT_SHA256=$(echo '${{ github.event.inputs.apatch-boot-sha256 || inputs.apatch-boot-sha256 || '' }}' | xargs)" >> $GITHUB_ENV
-          echo "APATCH_BOOT_VERSION=$(echo '${{ github.event.inputs.apatch-boot-version || inputs.apatch-boot-version || '' }}' | xargs)" >> $GITHUB_ENV
-          echo "APATCH_BOOT_DEVICE=$(echo '${{ github.event.inputs.device-id || inputs.device-id || 'shiba' }}' | xargs)" >> $GITHUB_ENV
-          echo "APATCH_MANAGER_APK=$(echo '${{ github.event.inputs.apatch-manager-url || inputs.apatch-manager-url || '' }}' | xargs)" >> $GITHUB_ENV
-          echo "APATCH_MANAGER_SHA256=$(echo '${{ github.event.inputs.apatch-manager-sha256 || inputs.apatch-manager-sha256 || '' }}' | xargs)" >> $GITHUB_ENV
-          echo "FORCE_OTA_SERVER_UPLOAD=$(echo '${{ github.event.inputs.force-ota-server-upload || inputs.force-ota-server-upload || '' }}' | xargs)" >> $GITHUB_ENV
-          echo "FORCE_BUILD=$(echo '${{ github.event.inputs.force-build || inputs.force-build || '' }}' | xargs)" >> $GITHUB_ENV
-          echo "UPLOAD_TEST_OTA=$(echo '${{ github.event.inputs.upload-test-ota || inputs.upload-test-ota || '' }}' | xargs)" >> $GITHUB_ENV
-          echo "SKIP_ROOTED=$(echo '${{ github.event.inputs.skip-rooted || inputs.skip-rooted || '' }}' | xargs)" >> $GITHUB_ENV
-          echo "SKIP_ROOTLESS=$(echo '${{ github.event.inputs.skip-rootless || inputs.skip-rootless || '' }}' | xargs)" >> $GITHUB_ENV
-          echo "SKIP_RELEASE=$(echo '${{ github.event.inputs.skip-release || inputs.skip-release || '' }}' | xargs)" >> $GITHUB_ENV
-          echo "SKIP_PIXINCREATE=$(echo '${{ github.event.inputs.skip-pixincreate || inputs.skip-pixincreate || 'false' }}' | xargs)" >> $GITHUB_ENV
+          echo "OTA_VERSION=$(echo '${{ github.event.inputs.ota-version || '' }}' | xargs)" >> $GITHUB_ENV
+          echo "FORCE_OTA_SERVER_UPLOAD=$(echo '${{ github.event.inputs.force-ota-server-upload || '' }}' | xargs)" >> $GITHUB_ENV
+          echo "FORCE_BUILD=$(echo '${{ github.event.inputs.force-build || '' }}' | xargs)" >> $GITHUB_ENV
+          echo "UPLOAD_TEST_OTA=$(echo '${{ github.event.inputs.upload-test-ota || '' }}' | xargs)" >> $GITHUB_ENV
+          echo "SKIP_ROOTLESS=$(echo '${{ github.event.inputs.skip-rootless || '' }}' | xargs)" >> $GITHUB_ENV
+          echo "SKIP_RELEASE=$(echo '${{ github.event.inputs.skip-release || '' }}' | xargs)" >> $GITHUB_ENV
+          echo "SKIP_PIXINCREATE=$(echo '${{ github.event.inputs.skip-pixincreate || 'false' }}' | xargs)" >> $GITHUB_ENV
           
           if [[ "${{ github.event_name }}" == "push" ]]  || [[ "${{ github.event_name }}" == "pull_request" ]]; then
             echo "Running on push: Simple build without release for device $DEVICE_ID"
             echo "FORCE_BUILD=true" >> $GITHUB_ENV
             echo "SKIP_RELEASE=true" >> $GITHUB_ENV
-            # Make sure the pixincreate flavor keeps building
-            echo "SKIP_PIXINCREATE=false" >> $GITHUB_ENV
-            echo "GITHUB_TOKEN=must-be-set-but-is-not-used" >> $GITHUB_ENV
-          else
-            echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
           fi
           
           # Split additional-env and set each key-value pair as an environment variable
-          IFS=' ' read -r -a env_vars <<< '${{ github.event.inputs.additional-env || inputs.additional-env || '' }}'
+          IFS=' ' read -r -a env_vars <<< '${{ github.event.inputs.additional-env || '' }}'
           for key_value_pair in "${env_vars[@]}"; do
             echo "$key_value_pair" >> $GITHUB_ENV
           done
       - run: sudo apt-get install -y jq curl git
-      - name: Test APatch flavor input validation
-        run: bash tests/apatch-flavor.sh
-      - name: Use dummy keys and certs for PRs
-        # Neither vars nor secrets are exposed to external PRs.
-        # We still want them to build so generating dummy secrets seems the pragmatic solution
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork
-        env:
-          AVBROOT_PASS: ci-test-pass
-        run: |
-          DEBUG=1 SKIP_CLEANUP=true bash -c '. rooted-ota.sh && downloadAvBroot'
-          .tmp/avbroot key generate-key --pass-env-var AVBROOT_PASS -o avb.key
-          .tmp/avbroot key generate-key --pass-env-var AVBROOT_PASS -o ota.key
-          .tmp/avbroot key generate-cert --pass-env-var AVBROOT_PASS -k ota.key -o ota.crt
-          echo finished generating dummy keys
-          echo "PASSPHRASE_AVB=$AVBROOT_PASS" >> "$GITHUB_ENV"
-          echo "PASSPHRASE_OTA=$AVBROOT_PASS" >> "$GITHUB_ENV"
-
-          echo "KEY_AVB_BASE64=$(base64 -w0 avb.key)" >> "$GITHUB_ENV"
-          echo "KEY_OTA_BASE64=$(base64 -w0 ota.key)" >> "$GITHUB_ENV"
-          echo "CERT_OTA_BASE64=$(base64 -w0 ota.crt)" >> "$GITHUB_ENV"
       - name: release
         env:
-          PASSPHRASE_AVB: ${{ secrets.PASSPHRASE_AVB || env.PASSPHRASE_AVB }}
-          PASSPHRASE_OTA: ${{ secrets.PASSPHRASE_OTA || env.PASSPHRASE_OTA }}
-          KEY_AVB_BASE64: ${{ secrets.KEY_AVB_BASE64 || env.KEY_AVB_BASE64 }}
-          CERT_OTA_BASE64: ${{ secrets.CERT_OTA_BASE64 || env.CERT_OTA_BASE64 }}
-          KEY_OTA_BASE64: ${{ secrets.KEY_OTA_BASE64 || env.KEY_OTA_BASE64 }}
-          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+          PASSPHRASE_AVB: ${{ secrets.PASSPHRASE_AVB }}
+          PASSPHRASE_OTA: ${{ secrets.PASSPHRASE_OTA }}
+          KEY_AVB_BASE64: ${{ secrets.KEY_AVB_BASE64 }}
+          CERT_OTA_BASE64: ${{ secrets.CERT_OTA_BASE64 }}
+          KEY_OTA_BASE64: ${{ secrets.KEY_OTA_BASE64 }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAGISK_VERSION: "v31.0"
           GITHUB_REPO: ${{ github.repository }}
           PAGES_REPO_FOLDER: 'ota'
         run: |
