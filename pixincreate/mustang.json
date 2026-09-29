@@ -1,7 +1,7 @@
 {
   "version": 2,
   "full": {
-    "location_ota": "https://github.com/WidosFTW/OTAvBraun/releases/download/2026091901/mustang-2026091901-d67dd63-pixincreate-v31.0.zip",
-    "location_csig": "https://github.com/WidosFTW/OTAvBraun/releases/download/2026091901/mustang-2026091901-d67dd63-pixincreate-v31.0.zip.csig"
+    "location_ota": "https://github.com/WidosFTW/OTAvBraun/releases/download/2026092501/mustang-2026092501-d67dd63-pixincreate-v31.0.zip",
+    "location_csig": "https://github.com/WidosFTW/OTAvBraun/releases/download/2026092501/mustang-2026092501-d67dd63-pixincreate-v31.0.zip.csig"
   }
 }
